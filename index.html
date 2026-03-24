@@ -687,6 +687,7 @@ const apiGroups = [
         endpoint: '/events/{id}',
         requiresAuth: true,
         fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
           { key: 'name', label: 'イベント名', type: 'text', placeholder: '第12回イラストレーターセミナー' },
           { key: 'location', label: '開催場所', type: 'text', placeholder: '東京都渋谷区 協会会議室' },
           { key: 'maxCapacity', label: '定員', type: 'number', placeholder: '例: 50' },
