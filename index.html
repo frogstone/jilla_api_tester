@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JILLA API Tester</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-primary: #1e3a5f;
+      --color-primary-dark: #142844;
+      --color-accent: #2e7df7;
+      --color-accent-hover: #1a6de0;
+      --color-bg: #f0f2f5;
+      --color-surface: #ffffff;
+      --color-border: #dde1e7;
+      --color-text: #1a202c;
+      --color-text-muted: #6b7280;
+      --color-success: #10b981;
+      --color-error: #ef4444;
+      --color-warning: #f59e0b;
+      --color-info: #3b82f6;
+      --color-get: #10b981;
+      --color-post: #3b82f6;
+      --color-put: #f59e0b;
+      --color-delete: #ef4444;
+      --radius: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Header ===== */
+    header {
+      background: var(--color-primary);
+      color: #fff;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .header-logo svg {
+      opacity: .8;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255,255,255,.2);
+    }
+
+    .header-api-select {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .header-api-select label {
+      font-size: 12px;
+      color: rgba(255,255,255,.6);
+      white-space: nowrap;
+    }
+
+    .header-api-select select {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      padding: 5px 28px 5px 10px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      min-width: 280px;
+      max-width: 400px;
+    }
+
+    .header-api-select select option {
+      background: var(--color-primary-dark);
+      color: #fff;
+    }
+
+    .header-api-select select optgroup {
+      font-weight: 600;
+      color: rgba(255,255,255,.5);
+    }
+
+    .header-token {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .header-token label {
+      font-size: 12px;
+      color: rgba(255,255,255,.6);
+      white-space: nowrap;
+    }
+
+    .header-token input {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      width: 220px;
+    }
+
+    .header-token input::placeholder { color: rgba(255,255,255,.35); }
+
+    .token-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .token-badge.active { background: rgba(16,185,129,.25); color: #6ee7b7; }
+    .token-badge.inactive { background: rgba(239,68,68,.2); color: #fca5a5; }
+
+    /* ===== Layout ===== */
+    .main-content {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 16px;
+      padding: 20px 24px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ===== Panel ===== */
+    .panel {
+      background: var(--color-surface);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fafbfc;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .panel-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* ===== Method + Endpoint ===== */
+    .endpoint-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--color-bg);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      border: 1px solid var(--color-border);
+      font-family: 'SF Mono', 'Consolas', monospace;
+    }
+
+    .method-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+
+    .method-GET    { background: #d1fae5; color: #065f46; }
+    .method-POST   { background: #dbeafe; color: #1e40af; }
+    .method-PUT    { background: #fef3c7; color: #92400e; }
+    .method-DELETE { background: #fee2e2; color: #991b1b; }
+    .method-PATCH  { background: #ede9fe; color: #5b21b6; }
+
+    .endpoint-path {
+      font-size: 12px;
+      color: var(--color-text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .endpoint-path .base-url { color: var(--color-text-muted); }
+
+    /* ===== Form ===== */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 5px;
+    }
+
+    .label-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    .label-badge.path { background: #ede9fe; color: #6d28d9; }
+    .label-badge.required { background: #fee2e2; color: #b91c1c; }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      color: var(--color-text);
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+      line-height: 1.4;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(46,125,247,.12);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 3px;
+    }
+
+    /* ===== Submit Button ===== */
+    .btn-submit {
+      width: 100%;
+      padding: 10px;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .15s, transform .1s;
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover { background: var(--color-accent-hover); }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Response Panel ===== */
+    .response-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: #fafbfc;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .status-code {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .status-code.ok    { background: #d1fae5; color: #065f46; }
+    .status-code.error { background: #fee2e2; color: #991b1b; }
+    .status-code.warn  { background: #fef3c7; color: #92400e; }
+    .status-code.empty { background: #f3f4f6; color: #6b7280; }
+
+    .status-time {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .btn-copy {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 3px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .btn-copy:hover { background: var(--color-bg); color: var(--color-text); }
+    .btn-copy.copied { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
+    .response-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .json-viewer {
+      font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      padding: 16px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .json-key    { color: #7c3aed; }
+    .json-str    { color: #059669; }
+    .json-num    { color: #d97706; }
+    .json-bool   { color: #2563eb; font-weight: 600; }
+    .json-null   { color: #9ca3af; font-weight: 600; }
+
+    .response-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--color-text-muted);
+      padding: 40px;
+      text-align: center;
+    }
+
+    .response-empty svg { opacity: .25; }
+    .response-empty p { font-size: 13px; }
+
+    /* ===== No fields message ===== */
+    .no-fields {
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13px;
+      padding: 20px 0;
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .main-content { grid-template-columns: 1fr; }
+      .header-token { display: none; }
+      .header-api-select select { min-width: 200px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== Header ===== -->
+  <header>
+    <div class="header-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 6h16M4 10h16M4 14h8M4 18h8"/>
+        <circle cx="19" cy="17" r="3"/>
+        <path d="M21.2 19.2L23 21"/>
+      </svg>
+      JILLA API Tester
+    </div>
+
+    <div class="header-divider"></div>
+
+    <div class="header-api-select">
+      <label>エンドポイント</label>
+      <select v-model="selectedKey" @change="onApiChange">
+        <template v-for="group in apiGroups" :key="group.group">
+          <optgroup :label="group.group">
+            <option v-for="api in group.apis" :key="api.key" :value="api.key">
+              [{{ api.method }}] {{ api.endpoint }}
+            </option>
+          </optgroup>
+        </template>
+      </select>
+    </div>
+
+    <div class="header-token">
+      <label>Bearer Token</label>
+      <input
+        v-model="bearerToken"
+        type="text"
+        placeholder="ログイン後に自動入力されます"
+      />
+      <span class="token-badge" :class="bearerToken ? 'active' : 'inactive'">
+        {{ bearerToken ? '認証済み' : '未認証' }}
+      </span>
+    </div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <div class="main-content">
+
+    <!-- Left: Form -->
+    <div class="panel">
+      <div class="panel-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M8 12h8M12 8v8"/>
+        </svg>
+        <span class="panel-title">リクエスト</span>
+        <span v-if="currentApi.requiresAuth" style="margin-left:auto;font-size:11px;color:#f59e0b;display:flex;align-items:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          要認証
+        </span>
+      </div>
+
+      <div class="panel-body">
+        <!-- Endpoint bar -->
+        <div class="endpoint-bar">
+          <span class="method-badge" :class="'method-' + currentApi.method">{{ currentApi.method }}</span>
+          <span class="endpoint-path">
+            <span class="base-url">{{ baseUrl }}</span>{{ currentApi.endpoint }}
+          </span>
+        </div>
+
+        <!-- Fields -->
+        <form @submit.prevent="sendRequest">
+          <div v-if="currentApi.fields.length === 0" class="no-fields">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>
+            </svg>
+            <p>入力項目はありません</p>
+          </div>
+
+          <div
+            v-for="field in currentApi.fields"
+            :key="field.key"
+            class="form-group"
+          >
+            <label class="form-label">
+              {{ field.label }}
+              <span v-if="field.isPathParam" class="label-badge path">パスパラメータ</span>
+              <span v-else-if="field.required" class="label-badge required">必須</span>
+            </label>
+
+            <textarea
+              v-if="field.type === 'textarea'"
+              v-model="formData[field.key]"
+              class="form-control"
+              :placeholder="field.placeholder || ''"
+              :required="field.required"
+            ></textarea>
+
+            <select
+              v-else-if="field.type === 'select'"
+              v-model="formData[field.key]"
+              class="form-control"
+            >
+              <option v-for="opt in field.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
+
+            <input
+              v-else
+              v-model="formData[field.key]"
+              class="form-control"
+              :type="field.type"
+              :placeholder="field.placeholder || ''"
+              :required="field.required"
+            />
+
+            <p v-if="field.hint" class="form-hint">{{ field.hint }}</p>
+          </div>
+
+          <button type="submit" class="btn-submit" :disabled="loading">
+            <div v-if="loading" class="spinner"></div>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+            </svg>
+            {{ loading ? '送信中...' : '送信' }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Response -->
+    <div class="panel">
+      <div class="panel-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+        </svg>
+        <span class="panel-title">レスポンス</span>
+
+        <div class="response-status-bar" style="background:none;border:none;padding:0;margin-left:auto;">
+          <span
+            v-if="statusCode"
+            class="status-code"
+            :class="statusCode >= 200 && statusCode < 300 ? 'ok' : statusCode >= 400 ? 'error' : 'warn'"
+          >{{ statusCode }}</span>
+          <span v-if="responseTime" class="status-time">{{ responseTime }}ms</span>
+          <button
+            v-if="responseRaw"
+            class="btn-copy"
+            :class="{ copied: copied }"
+            @click="copyResponse"
+          >{{ copied ? 'コピー済み ✓' : 'コピー' }}</button>
+        </div>
+      </div>
+
+      <div class="response-body">
+        <div v-if="!responseRaw" class="response-empty">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 9h6M9 13h4"/>
+          </svg>
+          <p>リクエストを送信すると<br>レスポンスがここに表示されます</p>
+        </div>
+        <div v-else class="json-viewer" v-html="highlightedJson"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, reactive, watch } = Vue;
+
+const BASE_URL = 'https://stg.api.jilla.or.jp/api';
+
+const apiGroups = [
+  {
+    group: '認証',
+    apis: [
+      {
+        key: 'auth_login',
+        name: 'ログイン',
+        method: 'POST',
+        endpoint: '/auth/login',
+        requiresAuth: false,
+        fields: [
+          { key: 'email', label: 'メールアドレス', type: 'email', required: true, placeholder: 'member@example.com' },
+          { key: 'password', label: 'パスワード', type: 'password', required: true, placeholder: '••••••••' },
+        ]
+      },
+      {
+        key: 'auth_logout',
+        name: 'ログアウト',
+        method: 'POST',
+        endpoint: '/auth/logout',
+        requiresAuth: true,
+        fields: []
+      },
+      {
+        key: 'auth_me',
+        name: 'ログイン中の会員情報',
+        method: 'GET',
+        endpoint: '/auth/me',
+        requiresAuth: true,
+        fields: []
+      },
+    ]
+  },
+  {
+    group: 'イベント管理',
+    apis: [
+      {
+        key: 'events_create',
+        name: 'イベント作成',
+        method: 'POST',
+        endpoint: '/events',
+        requiresAuth: true,
+        fields: [
+          { key: 'name', label: 'イベント名', type: 'text', required: true, placeholder: '第12回イラストレーターセミナー' },
+          { key: 'date', label: '開催日', type: 'date', required: true },
+          { key: 'location', label: '開催場所', type: 'text', required: true, placeholder: '東京都渋谷区 協会会議室' },
+          { key: 'eventType', label: 'イベント種別', type: 'select', options: [
+            { value: '', label: '選択してください' },
+            { value: 'seminar', label: 'セミナー' },
+            { value: 'meetup', label: '交流会' },
+            { value: 'assembly', label: '総会' },
+            { value: 'other', label: 'その他' },
+          ]},
+          { key: 'description', label: '説明', type: 'textarea', placeholder: 'イベントの詳細説明' },
+          { key: 'maxCapacity', label: '定員', type: 'number', placeholder: '例: 50' },
+        ]
+      },
+      {
+        key: 'events_index',
+        name: 'イベント一覧',
+        method: 'GET',
+        endpoint: '/events',
+        requiresAuth: true,
+        fields: [
+          { key: 'page', label: 'ページ番号', type: 'number', placeholder: '例: 1' },
+          { key: 'perPage', label: '表示件数', type: 'number', placeholder: '例: 20' },
+          { key: 'from', label: '開始日', type: 'date' },
+          { key: 'to', label: '終了日', type: 'date' },
+          { key: 'eventType', label: 'イベント種別', type: 'select', options: [
+            { value: '', label: '全て' },
+            { value: 'seminar', label: 'セミナー' },
+            { value: 'meetup', label: '交流会' },
+            { value: 'assembly', label: '総会' },
+            { value: 'other', label: 'その他' },
+          ]},
+        ]
+      },
+      {
+        key: 'events_show',
+        name: 'イベント詳細',
+        method: 'GET',
+        endpoint: '/events/{id}',
+        requiresAuth: true,
+        fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
+        ]
+      },
+      {
+        key: 'events_update',
+        name: 'イベント更新',
+        method: 'PUT',
+        endpoint: '/events/{id}',
+        requiresAuth: true,
+        fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
+          { key: 'name', label: 'イベント名', type: 'text', placeholder: '第12回イラストレーターセミナー' },
+          { key: 'date', label: '開催日', type: 'date' },
+          { key: 'location', label: '開催場所', type: 'text', placeholder: '東京都渋谷区 協会会議室' },
+          { key: 'eventType', label: 'イベント種別', type: 'select', options: [
+            { value: '', label: '変更なし' },
+            { value: 'seminar', label: 'セミナー' },
+            { value: 'meetup', label: '交流会' },
+            { value: 'assembly', label: '総会' },
+            { value: 'other', label: 'その他' },
+          ]},
+          { key: 'description', label: '説明', type: 'textarea', placeholder: 'イベントの詳細説明' },
+          { key: 'maxCapacity', label: '定員', type: 'number', placeholder: '例: 50' },
+        ]
+      },
+      {
+        key: 'events_delete',
+        name: 'イベント削除',
+        method: 'DELETE',
+        endpoint: '/events/{id}',
+        requiresAuth: true,
+        fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
+        ]
+      },
+    ]
+  },
+  {
+    group: '参加管理',
+    apis: [
+      {
+        key: 'attendances_create',
+        name: '参加記録登録',
+        method: 'POST',
+        endpoint: '/events/{id}/attendances',
+        requiresAuth: true,
+        fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
+          { key: 'memID', label: '会員ID', type: 'number', required: true, placeholder: '例: 100036' },
+          { key: 'checkedInAt', label: 'チェックイン時刻', type: 'datetime-local', required: true },
+          { key: 'deviceId', label: '端末識別子', type: 'text', placeholder: '例: iPad-Reception-01' },
+        ]
+      },
+      {
+        key: 'attendances_index',
+        name: '参加者一覧',
+        method: 'GET',
+        endpoint: '/events/{id}/attendances',
+        requiresAuth: true,
+        fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
+          { key: 'page', label: 'ページ番号', type: 'number', placeholder: '例: 1' },
+          { key: 'perPage', label: '表示件数', type: 'number', placeholder: '例: 20' },
+          { key: 'format', label: 'フォーマット', type: 'text', placeholder: 'csv（CSVダウンロード時）' },
+        ]
+      },
+      {
+        key: 'attendances_delete',
+        name: '参加記録削除',
+        method: 'DELETE',
+        endpoint: '/events/{id}/attendances/{attendanceId}',
+        requiresAuth: true,
+        fields: [
+          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
+          { key: 'attendanceId', label: '参加記録ID', type: 'text', required: true, isPathParam: true, placeholder: '例: 456' },
+        ]
+      },
+    ]
+  },
+  {
+    group: 'メンバー',
+    apis: [
+      {
+        key: 'members_verify',
+        name: '会員検証',
+        method: 'GET',
+        endpoint: '/members/{memID}/verify',
+        requiresAuth: true,
+        fields: [
+          { key: 'memID', label: '会員ID', type: 'text', required: true, isPathParam: true, placeholder: '例: 100036' },
+        ]
+      },
+    ]
+  },
+];
+
+createApp({
+  setup() {
+    const selectedKey = ref('auth_login');
+    const bearerToken = ref('');
+    const formData = reactive({});
+    const loading = ref(false);
+    const responseRaw = ref('');
+    const statusCode = ref(null);
+    const responseTime = ref(null);
+    const copied = ref(false);
+
+    const allApis = apiGroups.flatMap(g => g.apis);
+
+    const currentApi = computed(() =>
+      allApis.find(a => a.key === selectedKey.value) || allApis[0]
+    );
+
+    const baseUrl = BASE_URL;
+
+    function resetForm() {
+      Object.keys(formData).forEach(k => delete formData[k]);
+      currentApi.value.fields.forEach(f => {
+        formData[f.key] = '';
+      });
+    }
+
+    function onApiChange() {
+      resetForm();
+      responseRaw.value = '';
+      statusCode.value = null;
+      responseTime.value = null;
+    }
+
+    function buildUrl() {
+      let url = BASE_URL + currentApi.value.endpoint;
+      currentApi.value.fields
+        .filter(f => f.isPathParam)
+        .forEach(f => {
+          url = url.replace(`{${f.key}}`, encodeURIComponent(formData[f.key] || ''));
+        });
+      return url;
+    }
+
+    async function sendRequest() {
+      loading.value = true;
+      responseRaw.value = '';
+      statusCode.value = null;
+      responseTime.value = null;
+
+      const url = buildUrl();
+      const method = currentApi.value.method;
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      if (bearerToken.value) {
+        headers['Authorization'] = `Bearer ${bearerToken.value}`;
+      }
+
+      // Build body (exclude path params)
+      const bodyFields = currentApi.value.fields.filter(f => !f.isPathParam);
+      let body = undefined;
+      if (['POST', 'PUT', 'PATCH'].includes(method) && bodyFields.length > 0) {
+        const payload = {};
+        bodyFields.forEach(f => {
+          if (formData[f.key] !== '' && formData[f.key] !== undefined) {
+            payload[f.key] = formData[f.key];
+          }
+        });
+        body = JSON.stringify(payload);
+      }
+
+      // Build GET query params
+      let finalUrl = url;
+      if (method === 'GET' && bodyFields.length > 0) {
+        const params = new URLSearchParams();
+        bodyFields.forEach(f => {
+          if (formData[f.key] !== '' && formData[f.key] !== undefined) {
+            params.set(f.key, formData[f.key]);
+          }
+        });
+        const qs = params.toString();
+        if (qs) finalUrl += '?' + qs;
+      }
+
+      const start = Date.now();
+      try {
+        const res = await fetch(finalUrl, {
+          method,
+          headers,
+          body,
+        });
+
+        responseTime.value = Date.now() - start;
+        statusCode.value = res.status;
+
+        const text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          responseRaw.value = JSON.stringify(json, null, 2);
+
+          // Auto-save token on login (response: { success: true, data: { token: "..." } })
+          if (currentApi.value.key === 'auth_login') {
+            const token = json?.data?.token ?? json?.token ?? json?.access_token ?? null;
+            if (token) bearerToken.value = token;
+          }
+        } catch {
+          responseRaw.value = text;
+        }
+      } catch (err) {
+        responseTime.value = Date.now() - start;
+        statusCode.value = 0;
+        responseRaw.value = JSON.stringify({ error: err.message }, null, 2);
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    function syntaxHighlight(json) {
+      return json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(
+          /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          (match) => {
+            if (/^"/.test(match)) {
+              if (/:$/.test(match)) {
+                return `<span class="json-key">${match}</span>`;
+              }
+              return `<span class="json-str">${match}</span>`;
+            }
+            if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+            if (/null/.test(match)) return `<span class="json-null">${match}</span>`;
+            return `<span class="json-num">${match}</span>`;
+          }
+        );
+    }
+
+    const highlightedJson = computed(() =>
+      responseRaw.value ? syntaxHighlight(responseRaw.value) : ''
+    );
+
+    async function copyResponse() {
+      try {
+        await navigator.clipboard.writeText(responseRaw.value);
+        copied.value = true;
+        setTimeout(() => { copied.value = false; }, 2000);
+      } catch {}
+    }
+
+    // Init
+    resetForm();
+
+    return {
+      apiGroups,
+      selectedKey,
+      currentApi,
+      bearerToken,
+      formData,
+      loading,
+      responseRaw,
+      statusCode,
+      responseTime,
+      copied,
+      baseUrl,
+      highlightedJson,
+      onApiChange,
+      sendRequest,
+      copyResponse,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
