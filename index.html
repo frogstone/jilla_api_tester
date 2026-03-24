@@ -687,18 +687,8 @@ const apiGroups = [
         endpoint: '/events/{id}',
         requiresAuth: true,
         fields: [
-          { key: 'id', label: 'イベントID', type: 'text', required: true, isPathParam: true, placeholder: '例: 123' },
           { key: 'name', label: 'イベント名', type: 'text', placeholder: '第12回イラストレーターセミナー' },
-          { key: 'date', label: '開催日', type: 'date' },
           { key: 'location', label: '開催場所', type: 'text', placeholder: '東京都渋谷区 協会会議室' },
-          { key: 'eventType', label: 'イベント種別', type: 'select', options: [
-            { value: '', label: '変更なし' },
-            { value: 'seminar', label: 'セミナー' },
-            { value: 'meetup', label: '交流会' },
-            { value: 'assembly', label: '総会' },
-            { value: 'other', label: 'その他' },
-          ]},
-          { key: 'description', label: '説明', type: 'textarea', placeholder: 'イベントの詳細説明' },
           { key: 'maxCapacity', label: '定員', type: 'number', placeholder: '例: 50' },
         ]
       },
