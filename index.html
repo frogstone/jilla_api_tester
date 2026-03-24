@@ -601,7 +601,7 @@ const apiGroups = [
         key: 'auth_login',
         name: 'ログイン',
         method: 'POST',
-        endpoint: '/auth/login',
+        endpoint: '/login',
         requiresAuth: false,
         fields: [
           { key: 'email', label: 'メールアドレス', type: 'email', required: true, placeholder: 'member@example.com' },
@@ -612,7 +612,7 @@ const apiGroups = [
         key: 'auth_logout',
         name: 'ログアウト',
         method: 'POST',
-        endpoint: '/auth/logout',
+        endpoint: '/logout',
         requiresAuth: true,
         fields: []
       },
